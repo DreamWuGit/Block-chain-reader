@@ -11,5 +11,5 @@
 * ...
 
 
-欢迎分享，欢迎watch & Star！！！
+欢迎分享Contribute，欢迎watch & Star！！！
 

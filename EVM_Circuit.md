@@ -326,13 +326,13 @@ Then the constraints are
 - $a_{\text{reduced}}\cdot b + 0  
 == d\cdot 2^{256} + e$ (MulAddWords512Gadget);
 - $k\cdot n + r == d\cdot 2^{256} + e$ (MulAddWords512Gadget);
-- $1-\mathbf{1}_{\{r<n\}}-\mathbf{1}_{\{\verb#n_sum#=0\}}==0$ (IsZeroGadget, LtWordGadget);
+- $$1-\mathbf{1}_{\{r<n\}}-\mathbf{1}_{\{\verb#n_sum#=0\}}==0$$ (IsZeroGadget, LtWordGadget);
 - `SameContextGadget`
     - opcodeID checks: opId $==$ OpcodeId(0x09);
     - state transition: rw_counter +4; stack\_pointer +2; pc +1; gas - op_cost;
-    - Lookups: $4$ busmapping lookups: $a=\boldsymbol{\mu}_{\textbf{s}}[0]$, 
-$b=\boldsymbol{\mu}_{\textbf{s}}[1]$, $n=\boldsymbol{\mu}_{\textbf{s}}[2]$, 
-$r=\boldsymbol{\mu}_{\textbf{s}}'[0]$;
+    - Lookups: 4 busmapping lookups: $a=\boldsymbol{\mu}_s[0]$, 
+$b=\boldsymbol{\mu}_s[1]$, $n=\boldsymbol{\mu}_s[2]$, 
+$r=\boldsymbol{\mu}_s'[0]$;
     - Exceptions: 
         - 1. stack undeflow: $1022 \leq$ stack\_pointer $\leq 1024$; 
         - 2. out of gas: Remaining gas is not enough.
@@ -340,20 +340,22 @@ $r=\boldsymbol{\mu}_{\textbf{s}}'[0]$;
 
 #### `returndatacopy`
 
-According to the [ETH Yellow Paper], the RETURNDATACOPY opcode pops 3 stack elements $\boldsymbol{\mu}_{\textbf{s}}[0]$=`dest_offset`, $\boldsymbol{\mu}_{\textbf{s}}[1]$=`data_offset` and $\boldsymbol{\mu}_{\textbf{s}}[2]$=`size`. It copies output data from the previous call to memory. The copied output data starts from `data_offset` within return data from last call and memory copy starts from `dest_offset`, with copy data size equal to `size`. Denote by $\boldsymbol{\mu}'_{\textbf{m}}$ the updated memory state and $\boldsymbol{\mu}_{\textbf{o}}$ the return data from last call, then the rule is given by the following formula
-$$\forall i\in \{0... \boldsymbol{\mu}_{\textbf{s}}[2]-1\}: \boldsymbol{\mu}_{\textbf{m}}'[\boldsymbol{\mu}_{\textbf{s}}[0]+i]=\left\{
+According to the [ETH Yellow Paper], the RETURNDATACOPY opcode pops 3 stack elements $\boldsymbol{\mu}_s[0]$=`dest_offset`, $\boldsymbol{\mu}_s[1]$=`data_offset` and $\boldsymbol{\mu}_s[2]$=`size`. It copies output data from the previous call to memory. The copied output data starts from `data_offset` within return data from last call and memory copy starts from `dest_offset`, with copy data size equal to `size`. Denote by $\boldsymbol{\mu}'_m$ the updated memory state and $\boldsymbol{\mu}_o$ the return data from last call, then the rule is given by the following formula
+```math
+\forall i\in \{0... \boldsymbol{\mu}_s[2]-1\}: \boldsymbol{\mu}_'[\boldsymbol{\mu}_s[0]+i]=\left\{
 \begin{array}{ll}
-\boldsymbol{\mu}_{\textbf{o}}[\boldsymbol{\mu}_{\textbf{s}}[1]+i] & \text{ if } \boldsymbol{\mu}_{\textbf{s}}[1]+i<\|\boldsymbol{\mu}_{\textbf{o}}\|
+\boldsymbol{\mu}_{\textbf{o}}[\boldsymbol{\mu}_s[1]+i] & \text{ if } \boldsymbol{\mu}_{\textbf{s}}[1]+i<\|\boldsymbol{\mu}_o\|
 \\
 0 & \text{ otherwise .}
 \end{array}
-\right.$$
-Note that the data to be copied to memory that exceeds return data size ($\|\boldsymbol{\mu}_{\textbf{o}}\|$) will be padded by 0.
+\right.
+```
+Note that the data to be copied to memory that exceeds return data size ($\|\boldsymbol{\mu}_o\|$) will be padded by 0.
 
 For RETURNDATACOPY opcode, EVM Circuit does the following type of constraint checks together with witness assignments:
 
 - Constraints for stack pop of `dest_offset`, `data_offset` and `size`. This means they are assigned from the step's rw data (via bus mapping) and then they are checked by doing RwTable lookups with `tag=RwTableTag::Stack`, as well as verifying correct stack pointer update;
-- Constraints for call context related data including `last_callee_id`, `return_data_offset` (offset for $\boldsymbol{\mu}_{\textbf{o}}$) and `return_data_size` ($\|\boldsymbol{\mu}_{\textbf{o}}\|$). These are assigned and then checked by RwTable lookups with `tag=RwTableTag::CallContext`. Here return data means the output data from last call, from which we fetch data that is to be copied into memory;
+- Constraints for call context related data including `last_callee_id`, `return_data_offset` (offset for $\boldsymbol{\mu}_o$) and `return_data_size` ($\|\boldsymbol{\mu}_o\|$). These are assigned and then checked by RwTable lookups with `tag=RwTableTag::CallContext`. Here return data means the output data from last call, from which we fetch data that is to be copied into memory;
 - Constraints for ensuring no out-of-bound errors happen with `return_data_size`;
 - Constraints for memory related behavior. This includes memory address and expansion via `dest_offset` and `size`, as well as gas cost for memory expansion;
 - Constraints for copy behavior. This is done by lookup to CopyTable with `src_id=last_callee_id` (source call id) and `dst_id=` current step call id (destination call id), and corresponding source and destination addresses determined by `return_data_offset`, `return_data_size`, `data_offset`, `dest_offset` and `size` (that computes destination memory address);

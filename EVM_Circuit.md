@@ -340,7 +340,8 @@ $r=\boldsymbol{\mu}_s'[0]$;
 
 #### `returndatacopy`
 
-According to the [ETH Yellow Paper], the RETURNDATACOPY opcode pops 3 stack elements $\boldsymbol{\mu}_s[0]$=`dest_offset`, $\boldsymbol{\mu}_s[1]$=`data_offset` and $\boldsymbol{\mu}_s[2]$=`size`. It copies output data from the previous call to memory. The copied output data starts from `data_offset` within return data from last call and memory copy starts from `dest_offset`, with copy data size equal to `size`. Denote by $\boldsymbol{\mu}'_m$ the updated memory state and $\boldsymbol{\mu}_o$ the return data from last call, then the rule is given by the following formula
+According to the [ETH Yellow Paper], the RETURNDATACOPY opcode pops 3 stack elements $\boldsymbol{\mu}_s[0]$=`dest_offset`, $\boldsymbol{\mu}_s[1]$=`data_offset` and $\boldsymbol{\mu}_s[2]$=`size`. It copies output data from the previous call to memory. The copied output data starts from `data_offset` within return data from last call and memory copy starts from `dest_offset`, with copy data size equal to `size`. Denote by $\boldsymbol{\mu}'_m$ the updated memory state and $\boldsymbol{\mu}_o$ the return data from last call, then the rule is given by the following formula  
+
 ```math
 \forall i\in \{0... \boldsymbol{\mu}_s[2]-1\}: \boldsymbol{\mu}_'[\boldsymbol{\mu}_s[0]+i]=\left\{
 \begin{array}{ll}
@@ -350,6 +351,7 @@ According to the [ETH Yellow Paper], the RETURNDATACOPY opcode pops 3 stack elem
 \end{array}
 \right.
 ```
+
 Note that the data to be copied to memory that exceeds return data size ($\|\boldsymbol{\mu}_o\|$) will be padded by 0.
 
 For RETURNDATACOPY opcode, EVM Circuit does the following type of constraint checks together with witness assignments:
